@@ -4,15 +4,17 @@ import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux';
 
 import { Appbar, Menu, Divider, Provider } from 'react-native-paper';
-import { Badge, Icon, LinearProgress } from 'react-native-elements';
+import { Badge, Button, Icon, LinearProgress } from 'react-native-elements';
 import { getAuth, signOut, onAuthStateChanged } from 'firebase/auth'
 import { collection, addDoc, setDoc, doc, getDoc } from 'firebase/firestore'
-import { firestore } from "../config/firebase";
+import { firestore } from "../../config/firebase";
 import { useNavigation } from '@react-navigation/native';
 
-import { PersonalDetailsFun } from '../Redux/Slice/UserProfileSlice';
-import { CompaniesFun } from '../Redux/Slice/CompaniesSlice';
-import { Styles } from '../Styles/HomeCss';
+import { PersonalDetailsFun } from '../../Redux/Slice/UserProfileSlice';
+import { Styles } from '../../Styles/IndexScreens/HomeCss';
+import basicStrings from '../../Strings/basics.json'
+import appColors from '../../Others/appColors.json'
+import { ConnectionsFun } from '../../Redux/Slice/ConnectionsSlice';
 
 export default function Home() {
 
@@ -20,8 +22,7 @@ export default function Home() {
     const navigation = useNavigation();
     const dispatch = useDispatch();
     const userPersonalDataRedux = useSelector((state) => state.UserProfileReducer.personal);
-    const companyDataRedux = useSelector((state) => state.CompaniesReducer.companies_array);
-    const [visibleMainComponent, setVisibleMainComponent] = useState(false);
+    const [visibleMainComponent, setVisibleMainComponent] = useState(true);
 
     const [currentUserID, setCurrentUserID] = useState('');
 
@@ -39,27 +40,20 @@ export default function Home() {
         return () => unsubscribe();
     }, [])
 
-    useEffect(() => {
-        if (currentUserID) {
-            if(!companyDataRedux){
-                getAllCompaniesFromFirestore();
-                console.log("not exist");
-            }else{
-                checkIsUserIsCreatedProfile();
-                console.log("exist");
-            }
-            if(!isUserHavingProfile){
-                checkIsUserIsCreatedProfile();
-            }
-        }
-    }, [currentUserID]);
-
-    const getAllCompaniesFromFirestore = async () => {
-        const docRef = doc(firestore, "Companies", "Data");
-        const docSnap = await getDoc(docRef);
-        dispatch(CompaniesFun(docSnap.data().companies));
-        checkIsUserIsCreatedProfile();
-    }
+    // useEffect(() => {
+    //     if (currentUserID) {
+    //         if(!companyDataRedux){
+    //             getAllCompaniesFromFirestore();
+    //             console.log("not exist");
+    //         }else{
+    //             checkIsUserIsCreatedProfile();
+    //             console.log("exist");
+    //         }
+    //         if(!isUserHavingProfile){
+    //             checkIsUserIsCreatedProfile();
+    //         }
+    //     }
+    // }, [currentUserID]);
 
     const checkIsUserIsCreatedProfile = async () => {
         const docRef = doc(firestore, "Users", currentUserID, "Personal Details", "Data");
@@ -78,16 +72,23 @@ export default function Home() {
     }
 
     const logOutFun = () => {
+        dispatch(PersonalDetailsFun(null));
+        dispatch(ConnectionsFun(null));
         navigation.reset({
             index: 0,
             routes: [{ name: 'LogIn' }],
         });
     }
 
+    const navigateSomewhere =()=>{
+        navigation.navigate("Invite");
+    }
+
+
     return (
         <Provider>
-            <Appbar.Header style={Styles.AppbarHeader}>
-                <Appbar.Content title="STARS CONNECT" color='white' />
+            <Appbar.Header style={{backgroundColor:appColors.basicRed}}>
+                <Appbar.Content title={basicStrings.appName} color='white' />
                 <View style={Styles.headerNotificationContainer}>
                     <Icon name='bell' type='feather' color='white' onPress={() => console.log("hello")} />
                     <Badge
@@ -118,6 +119,9 @@ export default function Home() {
             {visibleMainComponent &&
                 <View style={{ backgroundColor: '#000000', flex: 1 }}>
                     <Text style={{ color: 'white' }}>Home</Text>
+                    <Button title="Check"
+                        onPress={navigateSomewhere}
+                        />
                 </View>
             }
         </Provider>
